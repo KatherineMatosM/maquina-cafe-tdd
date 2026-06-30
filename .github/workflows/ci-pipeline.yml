@@ -1,0 +1,46 @@
+# .github/workflows/ci-pipeline.yml
+# Pipeline de CI/CD para el proyecto TDD Maquina de Cafe
+# Se ejecuta en cada push y pull_request a cualquier rama.
+
+name: CI Pipeline - Maquina de Cafe TDD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-and-test:
+    name: Compilar y ejecutar pruebas JUnit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Compilar proyecto
+        run: mvn clean compile --no-transfer-progress
+
+      - name: Ejecutar pruebas TDD
+        run: mvn test --no-transfer-progress
+
+      - name: Publicar reporte de pruebas
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Resultados JUnit
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
